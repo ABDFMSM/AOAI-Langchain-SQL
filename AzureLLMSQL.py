@@ -2,7 +2,7 @@ import pandas as pd
 import sys 
 from dotenv import load_dotenv
 import os
-from sqlalchemy import create_engine, engine
+from sqlalchemy import create_engine
 from langchain.sql_database import SQLDatabase
 from langchain.chat_models import AzureChatOpenAI
 from langchain.agents.agent_toolkits import SQLDatabaseToolkit, create_sql_agent
@@ -19,13 +19,13 @@ class ChatHistory:
         self.messages.append(message)  
         if len(self.messages) > self.max_messages:  
             # Remove the oldest message to maintain the history size  
-            self.messages.pop(1)  
+            self.messages.pop(0)  
   
     def get_history(self):  
         return " ".join(self.messages) 
 
 class SQLLoader:    
-    def __init__(self, df=[]):    
+    def __init__(self, df=None):    
         self.engine = self.create_engine()  
         self.df = df  
   
@@ -47,25 +47,15 @@ class SQLLoader:
     def insert_data(self, table_name):  
         # Use pandas to_sql method for inserting the data  
         self.df.to_sql(table_name, self.engine, if_exists='append', index=False)  
-        print(f"Data has been inserted into table {table_name}.")
+        print(f"Data has been inserted into {table_name} table.")
 
     def read_db(self):
-        db_config = {
-            'drivername': 'mssql+pyodbc', 
-            'username': os.getenv('SQL_USERNAME') + '@' + os.getenv('SQL_ENDPOINT'), 
-            'password': os.getenv('SQL_PASSWORD'), 
-            'host': os.getenv('SQL_ENDPOINT'),
-            'port': 1433, 
-            'database': os.getenv('SQL_DATABASE'),
-            'query': dict(driver='ODBC Driver 18 for SQL Server')
-        }
-        db_url = engine.URL.create(**db_config)
-        return SQLDatabase.from_uri(db_url)
+        return SQLDatabase(self.engine)
 
       
 # Usage example:  
 
-if sys.argv[1]:
+if len(sys.argv[:]) > 1:
     df = pd.read_csv(sys.argv[1]).fillna(value=0)
     loader = SQLLoader(df)  
     table_name = input("What would you like to call the table?\n")
@@ -76,7 +66,7 @@ else:
 
 # Configuring the SQL agent: 
 sql_db = loader.read_db()
-llm = AzureChatOpenAI(deployment_name="AMGPT4Turbo", temperature=0)
+llm = AzureChatOpenAI(deployment_name=os.getenv('Completion_model'), temperature=0)
 toolkit = SQLDatabaseToolkit(db=sql_db, llm=llm) 
 
 agent_executor = create_sql_agent(
@@ -88,14 +78,18 @@ agent_executor = create_sql_agent(
 
 chat_history = ChatHistory(max_messages=10)  # Set the number of past messages to include  
 
-question = input("What do you like to ask?\n")
-while "exit" not in question: 
-     # Prepend chat history to the question  
-    question_with_history = chat_history.get_history() + question  
-    answer = agent_executor.run(question_with_history)  
-    print(answer)  
-  
-    # Update chat history with the latest exchange  
-    chat_history.add_message(f"Q: {question} A: {answer}")  
-  
-    question = input("Do you have other queries you would like to know about?\n")  
+def main():
+    question = input("What do you like to ask?\n")
+    while "exit" not in question.lower(): 
+        # Prepend chat history to the question  
+        question_with_history = chat_history.get_history() + question  
+        answer = agent_executor.run(question_with_history)  
+        print(answer)  
+    
+        # Update chat history with the latest exchange  
+        chat_history.add_message(f"Q: {question} A: {answer}")  
+    
+        question = input("Do you have other queries you would like to know about?\n")  
+
+if __name__ == "__main__":
+    main()
