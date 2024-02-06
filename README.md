@@ -16,8 +16,10 @@ You can get the information related to the SQL database from the connection stri
 ![Sql_information](Images/SQL_Info.png)
 
 From the above image you can find a link to download the necceary driver for the ODBC servce. This driver will allow you to connect to the Azure SQL database. 
-Be sure to download the *ODBC Driver 18* 
+Be sure to download the **ODBC Driver 18** 
 
-Fill out your resource details as shown below:  
-![Environment Variables](Images/EnvVariables.png) 
+3. Fill out your .env details as shown below:  
+![Environment Variables](Images/EnvVariables.png)
+
+
 
