@@ -1,6 +1,5 @@
 langchain
 openai 
 pandas
-pyodbc 
 python-dotenv 
 sqlalchemy
