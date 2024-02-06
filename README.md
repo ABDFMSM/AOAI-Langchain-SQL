@@ -43,7 +43,36 @@ When creating a copy of the class we can define the maximum number of messages t
 
 ## Step 3 - SQLLoader Class: 
 This class will be used to create table, insert data, and load data from the SQL database. 
-The create_table, insert data will be used to get the data from the loaded csv file and inserting the csv file contents in the database. User can define the name of the created table. 
+1. The create_engine() is the first function in the class that is used to create the connection to the Azure SQL database as shown belwo: 
+``` python
+def create_engine(self):  
+        username = os.getenv('SQL_USERNAME')  
+        password = os.getenv('SQL_PASSWORD')  
+        server = f"tcp:{os.getenv('SQL_ENDPOINT')}"
+        database = os.getenv('SQL_DATABASE')  
+        driver = "ODBC Driver 18 for SQL Server"  
+        connection_string = f"mssql+pyodbc:///?odbc_connect=DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"  
+        engine = create_engine(connection_string)  
+        return engine
+```
+
+2. The create_table(), insert data() functions will be used to get the data from the loaded csv file and inserting the csv file contents in the database. User can define the name of the created table.
+``` python
+    def create_table(self, table_name):  
+        # Use SQLAlchemy to generate the table schema from the dataframe  
+        self.df.to_sql(table_name, self.engine, if_exists='replace', index=False)  
+        print(f"Table {table_name} has been created in the database.")
+      
+    def insert_data(self, table_name):  
+        # Use pandas to_sql method for inserting the data  
+        self.df.to_sql(table_name, self.engine, if_exists='append', index=False)  
+        print(f"Data has been inserted into {table_name} table.")
+```
+3. The read_db() function will be used to return an SQLDatabase from the engine connection so that it can be used as an sql database in the sql_agent:
+``` python
+def read_db(self):
+        return SQLDatabase(self.engine)
+``` 
 
 ## Step 4 - Main function: 
 
