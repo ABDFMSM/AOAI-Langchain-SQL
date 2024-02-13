@@ -110,7 +110,7 @@ while "exit" not in question.lower():
         question = input("\nDo you have other queries you would like to know about? if not type exit to end the chat.\n")
 ```
 I have include the following video that shows how even when using different languages the GPT-4 was able to retrieve correct answers from the Azure SQL databse. 
-[Example Video](Images/UsageExample.mp4) 
+![Example Video](Images/UsageExample.mp4) 
 
 Enjoy! 
 
