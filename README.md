@@ -111,6 +111,6 @@ while "exit" not in question.lower():
 ```
 I have include the following video that shows how even when using different languages the GPT-4 was able to retrieve correct answers from the Azure SQL databse. 
 
-[![Example Video](Images/UsageExample.mp4)]
+https://github.com/ABDFMSM/AOAI-Langchain-SQL/assets/133496062/647db31b-50f8-4720-9c86-06d3af31d154
 
 Enjoy! 
