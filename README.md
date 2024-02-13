@@ -1,7 +1,15 @@
 # AOAI-Langchain-SQL
+In this repo, I am using GPT-4 turbo from Azure OpenAI, Azure SQL database and langchain to answer user's questions based on the information available on the SQL database. 
+
+You can use the following links to create the requried resources: 
+1) [Create Azure OpenAI Resource](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource?pivots=web-portal)
+2) [Create Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal) 
 
 # Table of contents:
 - [Step 1 - Installing the Requirements and Gettings Things Ready]
+- [Step 2 - Loading the csv file data to Azure SQL database]
+- [Step 3 - Configuring Chatbot]
+- [Step 4 - Running the code] 
 
 
 ## Step 1 - Installing the Requirements and Gettings Things Ready
@@ -20,28 +28,7 @@ Be sure to download the **ODBC Driver 18**
 4. Fill out your .env details as shown below:  
 ![Environment Variables](Images/EnvVariables.png)
 
-## Step 2 - ChatHistory Class: 
-I have created a class to keep track of the chat hisotry where we can define how many past messages to be included in context when querying the database. 
-In the add_message function we can see how the ChatHistory will remove the earliest message when exceeding the max_messages to be included in the conversation. 
-``` python
-class ChatHistory:  
-    def __init__(self, max_messages=5):  
-        self.max_messages = max_messages  
-        self.messages = []  
-  
-    def add_message(self, message):  
-        self.messages.append(message)  
-        if len(self.messages) > self.max_messages:  
-            # Remove the oldest message to maintain the history size  
-            self.messages.pop(1)  
-  
-    def get_history(self):  
-        return " ".join(self.messages)
-```
-When creating a copy of the class we can define the maximum number of messages to include by using the max_messages parameter.
-
-
-## Step 3 - SQLLoader Class: 
+## Step 2 - Loading the csv file data to Azure SQL database:
 This class will be used to create table, insert data, and load data from the SQL database. 
 1. The create_engine() is the first function in the class that is used to create the connection to the Azure SQL database as shown belwo: 
 ``` python
@@ -72,9 +59,12 @@ def create_engine(self):
 ``` python
 def read_db(self):
         return SQLDatabase(self.engine)
-``` 
+```
 
-## Step 4 - Main function: 
+## Step 3 Configuring Chatbot: 
+
+
+## Step 4 - Running the code: 
 
 
 
