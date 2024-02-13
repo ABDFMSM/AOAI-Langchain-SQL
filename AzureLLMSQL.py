@@ -4,25 +4,15 @@ from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine
 from langchain.sql_database import SQLDatabase
-from langchain.chat_models import AzureChatOpenAI
-from langchain.agents.agent_toolkits import SQLDatabaseToolkit, create_sql_agent
-from langchain.agents.agent_types import AgentType
+from langchain_openai.chat_models import AzureChatOpenAI
+from langchain_community.agent_toolkits import SQLDatabaseToolkit
+from langchain.agents import create_openai_tools_agent
+from langchain.memory import ConversationBufferWindowMemory
+from langchain.agents.agent import AgentExecutor
+from langchain_core.messages import SystemMessage
+from langchain_core.prompts.chat import ChatPromptTemplate, HumanMessagePromptTemplate, MessagesPlaceholder
 
 load_dotenv()
-
-class ChatHistory:  
-    def __init__(self, max_messages=5):  
-        self.max_messages = max_messages  
-        self.messages = []  
-  
-    def add_message(self, message):  
-        self.messages.append(message)  
-        if len(self.messages) > self.max_messages:  
-            # Remove the oldest message to maintain the history size  
-            self.messages.pop(0)  
-  
-    def get_history(self):  
-        return " ".join(self.messages) 
 
 class SQLLoader:    
     def __init__(self, df=None):    
@@ -55,6 +45,28 @@ class SQLLoader:
       
 # Usage example:  
 
+prompt = ChatPromptTemplate.from_messages(
+    [
+        SystemMessage(
+            content="""You are an AI assistance who can access an Azure SQL Database to get answers to customer's questions. 
+            You mainly have Titanic and Books table that you can check the table schema when you don't get information that will help you to answer the question.
+            Always return the SQL command that you used to perform your query. 
+            """
+        ),  # The persistent system prompt
+        MessagesPlaceholder(
+            variable_name="chat_history"
+        ),  # Where the memory will be stored.
+        MessagesPlaceholder(
+            variable_name='agent_scratchpad'
+        ),  # where tools are loaded for intermediate steps.
+        HumanMessagePromptTemplate.from_template(
+            "{input}"
+        ),  # Where the human input will injected
+    ]
+)
+
+# Check if there is a csv file passed as an argument. 
+# If there is a file, it will be uploaded to the Azure SQL database. 
 if len(sys.argv[:]) > 1:
     df = pd.read_csv(sys.argv[1]).fillna(value=0)
     loader = SQLLoader(df)  
@@ -64,32 +76,32 @@ if len(sys.argv[:]) > 1:
 else:
     loader = SQLLoader() 
 
-# Configuring the SQL agent: 
+# Configuring the SQL toolkit: 
 sql_db = loader.read_db()
-llm = AzureChatOpenAI(deployment_name=os.getenv('Completion_model'), temperature=0)
+llm = AzureChatOpenAI(deployment_name=os.getenv("Completion_model"), temperature=0)
 toolkit = SQLDatabaseToolkit(db=sql_db, llm=llm) 
+context = toolkit.get_context()
+tools = toolkit.get_tools()
 
-agent_executor = create_sql_agent(
-    llm=llm, 
-    toolkit=toolkit, 
-    verbose=False, 
-    agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION, 
+prompt = prompt.partial(**context)
+memory = ConversationBufferWindowMemory(memory_key="chat_history", return_messages=True, k= 8)
+
+agent = create_openai_tools_agent(llm, tools, prompt)
+
+agent_executor = AgentExecutor(
+    agent=agent,
+    tools=toolkit.get_tools(),
+    verbose=True,
+    memory=memory, 
+    max_iterations= 8
 )
-
-chat_history = ChatHistory(max_messages=10)  # Set the number of past messages to include  
 
 def main():
     question = input("What do you like to ask?\n")
-    while "exit" not in question.lower(): 
-        # Prepend chat history to the question  
-        question_with_history = chat_history.get_history() + question  
-        answer = agent_executor.run(question_with_history)  
-        print(answer)  
-    
-        # Update chat history with the latest exchange  
-        chat_history.add_message(f"Q: {question} A: {answer}")  
-    
-        question = input("Do you have other queries you would like to know about?\n")  
+    while "exit" not in question.lower():  
+        answer = agent_executor.invoke({"input": question})
+        print(answer['output'])  
+        question = input("\nDo you have other queries you would like to know about? if not type exit to end the chat.\n")  
 
 if __name__ == "__main__":
     main()
