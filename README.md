@@ -6,10 +6,10 @@ You can use the following links to create the requried resources:
 2) [Create Azure SQL Database](https://learn.microsoft.com/en-us/azure/azure-sql/database/single-database-create-quickstart?view=azuresql&tabs=azure-portal) 
 
 # Table of contents:
-- [Step 1 - Installing the Requirements and Gettings Things Ready]
-- [Step 2 - Loading the csv file data to Azure SQL database]
-- [Step 3 - Configuring Chatbot]
-- [Step 4 - Running the code] 
+- [Step 1 - Installing the Requirements and Gettings Things Ready](https://github.com/ABDFMSM/AOAI-Langchain-SQL?tab=readme-ov-file#step-1---installing-the-requirements-and-gettings-things-ready)
+- [Step 2 - Loading the csv file data to Azure SQL database](https://github.com/ABDFMSM/AOAI-Langchain-SQL?tab=readme-ov-file#step-2---loading-the-csv-file-data-to-azure-sql-database)
+- [Step 3 - Configuring Chatbot](https://github.com/ABDFMSM/AOAI-Langchain-SQL?tab=readme-ov-file#step-3-configuring-chatbot)
+- [Step 4 - Running the code](https://github.com/ABDFMSM/AOAI-Langchain-SQL?tab=readme-ov-file#step-4---running-the-code)
 
 
 ## Step 1 - Installing the Requirements and Gettings Things Ready
