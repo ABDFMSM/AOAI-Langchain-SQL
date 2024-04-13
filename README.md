@@ -25,7 +25,8 @@ You can get the information related to the SQL database from the connection stri
 From the above image you can find a link to download the necceary driver for the ODBC servce. This driver will allow you to connect to the Azure SQL database. 
 Be sure to download the **ODBC Driver 18** 
 
-4. Fill out your .env details as shown below:  
+4. Fill out your .env details as shown below:
+### Note: Be sure to use a working (not depercated) API version for the AOAI model.   
 ![Environment Variables](Images/EnvVariables.png)
 
 ## Step 2 - Loading the csv file data to Azure SQL database:
