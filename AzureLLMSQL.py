@@ -15,11 +15,11 @@ from langchain_core.prompts.chat import ChatPromptTemplate, HumanMessagePromptTe
 load_dotenv()
 
 class SQLLoader:    
-    def __init__(self, df=None):    
+    def __init__(self, df=None) -> None:    
         self.engine = self.create_engine()  
         self.df = df  
   
-    def create_engine(self):  
+    def create_engine(self) -> Engine:  
         username = os.getenv('SQL_USERNAME')  
         password = os.getenv('SQL_PASSWORD')  
         server = f"tcp:{os.getenv('SQL_ENDPOINT')}"
@@ -29,21 +29,37 @@ class SQLLoader:
         engine = create_engine(connection_string)  
         return engine   
 
-    def create_table(self, table_name):  
+    def create_table(self, table_name: str) -> None:  
         # Use SQLAlchemy to generate the table schema from the dataframe  
         self.df.to_sql(table_name, self.engine, if_exists='replace', index=False)  
         print(f"Table {table_name} has been created in the database.")
       
-    def insert_data(self, table_name):  
+    def insert_data(self, table_name: str) -> None:  
         # Use pandas to_sql method for inserting the data  
         self.df.to_sql(table_name, self.engine, if_exists='append', index=False)  
         print(f"Data has been inserted into {table_name} table.")
 
-    def read_db(self):
+    def read_db(self) -> SQLDatabase:
         return SQLDatabase(self.engine)
-
       
-# Usage example:  
+# Check if there is a csv file passed as an argument. 
+# If there is a file, it will be uploaded to the Azure SQL database. 
+if len(sys.argv[:]) > 1:
+    df = pd.read_csv(sys.argv[1]).fillna(value=0)
+    loader = SQLLoader(df)  
+    table_name = input("What would you like to call the table?\n")
+    loader.create_table(table_name)  
+    loader.insert_data(table_name)
+else:
+    loader = SQLLoader() 
+
+# Configuring the SQL toolkit: 
+sql_db = loader.read_db()
+llm = AzureChatOpenAI(deployment_name=os.getenv("Completion_model"), temperature=0)
+toolkit = SQLDatabaseToolkit(db=sql_db, llm=llm) 
+context = toolkit.get_context()
+tools = toolkit.get_tools()
+
 
 prompt = ChatPromptTemplate.from_messages(
     [
@@ -65,24 +81,6 @@ prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-# Check if there is a csv file passed as an argument. 
-# If there is a file, it will be uploaded to the Azure SQL database. 
-if len(sys.argv[:]) > 1:
-    df = pd.read_csv(sys.argv[1]).fillna(value=0)
-    loader = SQLLoader(df)  
-    table_name = input("What would you like to call the table?\n")
-    loader.create_table(table_name)  
-    loader.insert_data(table_name)
-else:
-    loader = SQLLoader() 
-
-# Configuring the SQL toolkit: 
-sql_db = loader.read_db()
-llm = AzureChatOpenAI(deployment_name=os.getenv("Completion_model"), temperature=0)
-toolkit = SQLDatabaseToolkit(db=sql_db, llm=llm) 
-context = toolkit.get_context()
-tools = toolkit.get_tools()
-
 prompt = prompt.partial(**context)
 memory = ConversationBufferWindowMemory(memory_key="chat_history", return_messages=True, k= 8)
 
@@ -96,7 +94,7 @@ agent_executor = AgentExecutor(
     max_iterations= 8
 )
 
-def main():
+def main() -> None:
     question = input("What do you like to ask?\n")
     while "exit" not in question.lower():  
         answer = agent_executor.invoke({"input": question})
