@@ -26,7 +26,7 @@ From the above image you can find a link to download the necceary driver for the
 Be sure to download the **ODBC Driver 18** 
 
 4. Fill out your .env details as shown below:
-### Note: Be sure to use a working (not depercated) API version for the AOAI model.   
+#### Note: Be sure to use a working (not depercated) API version for the AOAI model.   
 ![Environment Variables](Images/EnvVariables.png)
 
 ## Step 2 - Loading the csv file data to Azure SQL database:
